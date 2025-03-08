@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Client</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; }
+        #chat { width: 60%; margin: auto; max-height: 400px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; }
+        input, button { margin-top: 10px; padding: 8px; }
+    </style>
+</head>
+<body>
+    <h2>WebSocket Parent Client</h2>
+    <div id="chat"></div>
+    <input type="text" id="message" placeholder="Enter message">
+    <button onclick="sendMessage()">Send</button>
+    <input type="text" id="uuid" placeholder="Enter id">
+    <button onclick="addUser()">set</button>
+
+    <script>
+        let socket = null;
+        
+        function connectWebSocket(id) {
+            socket = new WebSocket(`ws://localhost:9876/subscribe-location?userId=${id}`); // Replace with your WebSocket server URL
+
+            socket.id = id
+            socket.onopen = () => {
+                logMessage("✅ Connected to server.");
+            };
+
+            socket.onmessage = (event) => {
+                logMessage(`📩 Server: ${event.data}`);
+            };
+
+            socket.onclose = () => {
+                logMessage("❌ Disconnected " + id);
+            };
+
+            socket.onerror = (error) => {
+                console.error("WebSocket error:", error);
+            };
+        }
+
+        function sendMessage() {
+            const message = document.getElementById("message").value; 
+            if (message.trim() !== "" && socket.readyState === WebSocket.OPEN) {
+                socket.send(message);
+                logMessage(`🧑‍💻 ${socket.id}: ${message}`);
+                document.getElementById("message").value = "";
+            }
+        }
+
+        function logMessage(msg) {
+            const chat = document.getElementById("chat");
+            chat.innerHTML += `<p>${msg}</p>`;
+            chat.scrollTop = chat.scrollHeight;
+        }
+
+
+        function addUser() {
+            if(socket != null)  socket.close()
+            const uuid = document.getElementById("uuid").value;
+            connectWebSocket(uuid);
+        }
+
+    </script>
+</body>
+</html>
