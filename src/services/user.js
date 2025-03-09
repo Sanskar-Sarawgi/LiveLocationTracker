@@ -1,7 +1,7 @@
 import db from '../models/index.js';
-import { Op, where } from "sequelize";
+import { Op } from "sequelize";
 
-const {userAccount, teamManager, teamUser} = db
+const {userAccount, teamManager, teamUser, user} = db
 
 export const isValidChild = async (child_uuid) => {
 
@@ -61,4 +61,22 @@ export const allChild = async (parent_uuid) => {
 
 export const isChildMapped = (parent_uuid, child_uuid) => {
     return allChild(parent_uuid).some(e => e == child_uuid)
+}
+
+export const getIdFromEmail = async (email) => {
+    const user_inst = await user.findOne({
+        where: {
+            email: email
+        }
+    })
+    
+    if(user_inst == null) return null
+    
+    const user_account_inst = await userAccount.findOne({
+        where: {
+            user_uuid: user_inst.uuid
+        }
+    })
+    
+    return user_account_inst.uuid
 }

@@ -15,26 +15,29 @@
     <div id="chat"></div>
     <input type="text" id="message" placeholder="Enter message">
     <button onclick="sendMessage()">Send</button>
-    <input type="text" id="uuid" placeholder="Enter id">
-    <button onclick="addUser()">set</button>
+    <input type="text" id="email" placeholder="Enter id">
+    <button onclick="setUpSocket()">set</button>
 
     <script>
+
+        
         let socket = null;
+        const port = '9876'
         
         function connectWebSocket(id) {
-            socket = new WebSocket(`ws://localhost:9876/subscribe-location?userId=${id}`); // Replace with your WebSocket server URL
+            socket = new WebSocket(`ws://localhost:${port}/subscribe-location?userId=${id}`);
 
             socket.id = id
             socket.onopen = () => {
-                logMessage("✅ Connected to server.");
+                logMessage("Connected to server.");
             };
 
             socket.onmessage = (event) => {
-                logMessage(`📩 Server: ${event.data}`);
+                logMessage(`Server: ${event.data}`);
             };
 
             socket.onclose = () => {
-                logMessage("❌ Disconnected " + id);
+                logMessage("Disconnected " + id);
             };
 
             socket.onerror = (error) => {
@@ -46,7 +49,7 @@
             const message = document.getElementById("message").value; 
             if (message.trim() !== "" && socket.readyState === WebSocket.OPEN) {
                 socket.send(message);
-                logMessage(`🧑‍💻 ${socket.id}: ${message}`);
+                logMessage(`${socket.id}: ${message}`);
                 document.getElementById("message").value = "";
             }
         }
@@ -58,12 +61,19 @@
         }
 
 
-        function addUser() {
+        function addUser(uuid) {
             if(socket != null)  socket.close()
-            const uuid = document.getElementById("uuid").value;
             connectWebSocket(uuid);
         }
 
+        function setUpSocket() {
+            const email = document.getElementById("email").value;
+            fetch(`https://localhost:${port}/get_id?email=${encodeURIComponent(email)}`).then((data) => {
+                return data.json()
+            }).then((data) => {
+                addUser(data.uuid)
+            })
+        }
     </script>
 </body>
 </html>

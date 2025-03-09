@@ -4,19 +4,22 @@ import { handleRequestData } from "./src/handlers/index.js";
 import { createServer } from "http";
 import logger from "./config/logger.js";
 import { v4 as uuidv4 } from "uuid"; // Use UUID for unique socket IDs
-import { allChild, isValidUser } from "./src/services/user.js";
+import { isValidUser } from "./src/services/user.js";
 import { handleUpgradeRequest } from "./src/handlers/upgrade.js";
-
-const server = createServer((req, res) => {
-  if (req.url === "/ws_health_check") {
-    res.writeHead(200, { "Content-Type": "text/plain" });
-    res.end("OK");
-    return;
-  }
-});
+import startHeartbeat from "./src/utils/ws-helper.js";
+import fs from "fs"
+import { httpRequestHandler } from "./src/handlers/http-request.js";
 
 const clients = new Map();
 const pubSub = new Map();
+
+var options = {
+  key: fs.readFileSync('./private.key'),
+  cert: fs.readFileSync('./certificate.pem'),
+};
+
+const server = createServer(options, httpRequestHandler);
+
 const wss = new WebSocketServer({ noServer: true });
 
 server.on("upgrade", async (request, socket, head) => {
@@ -40,16 +43,23 @@ server.on("upgrade", async (request, socket, head) => {
       pubSub
     }
 
-    logger.info(`Client connected with Socket ID: ${userId}`);
+    logger.info(`Client connected with UUID: ${userId}`);
     await handleUpgradeRequest(action, data)
-    console.log(pubSub)
 
     wss.emit("connection", ws, request);
   });
 });
 
+startHeartbeat(wss)
+
 // Handle WebSocket connections
 wss.on("connection", (ws, request) => {
+
+  // Setup ping/pong
+  ws.isAlive = true;
+  
+  ws.on("pong", function ()  {this.isAlive = true;});
+
   ws.on("error", (error) => {
     logger.error("WebSocket error:", error);
   });
@@ -66,6 +76,10 @@ wss.on("connection", (ws, request) => {
       }
     } catch (err) {
       logger.info("Error processing message:", err);
+      ws.send(JSON.stringify({ 
+        error: true, 
+        message: "Failed to process message" 
+      }));
     }
   });
 
