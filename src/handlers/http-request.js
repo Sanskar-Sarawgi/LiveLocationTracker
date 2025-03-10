@@ -1,5 +1,6 @@
 import url from "url"
 import { allChild, getIdFromEmail } from "../services/user.js"
+import fs from "fs"
 
 export const httpRequestHandler = async (req, res) => {
 
@@ -59,6 +60,15 @@ export const httpRequestHandler = async (req, res) => {
   if (req.url === "/ws_health_check") {
     res.writeHead(200, { "Content-Type": "text/plain" });
     res.end("OK");
+    return;
+  }
+
+  if (/\.html$/.test(req.url)) {
+    const html = fs.readFileSync(`./client${req.url}`)
+ 
+    res.writeHeader(200, {"Content-Type": "text/html"});  
+    res.write(html);  
+    res.end(); 
     return;
   }
 }

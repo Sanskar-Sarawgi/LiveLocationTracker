@@ -1,9 +1,8 @@
 import { WebSocketServer } from "ws";
 import "./config/load-env.js";
 import { handleRequestData } from "./src/handlers/index.js";
-import { createServer } from "http";
+import { createServer } from "https";
 import logger from "./config/logger.js";
-import { v4 as uuidv4 } from "uuid"; // Use UUID for unique socket IDs
 import { isValidUser } from "./src/services/user.js";
 import { handleUpgradeRequest } from "./src/handlers/upgrade.js";
 import startHeartbeat from "./src/utils/ws-helper.js";
@@ -14,7 +13,7 @@ const clients = new Map();
 const pubSub = new Map();
 
 var options = {
-  key: fs.readFileSync('./private.key'),
+  key: fs.readFileSync('./private-key.pem'),
   cert: fs.readFileSync('./certificate.pem'),
 };
 

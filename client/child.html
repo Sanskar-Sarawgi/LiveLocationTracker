@@ -26,10 +26,10 @@
 
     <script>
         let socket = null;
-        const port = '9876';
+        const port = '443';
         
         function connectWebSocket(id) {
-            socket = new WebSocket(`ws://localhost:${port}/public-location?userId=${id}`); // Replace with your WebSocket server URL
+            socket = new WebSocket(`wss://example.com:${port}/public-location?userId=${id}`); // Replace with your WebSocket server URL
 
             socket.id = id
             socket.onopen = () => {
@@ -53,9 +53,13 @@
 
         function sendMessage() {
             const message = document.getElementById("message").value; 
+            const payload = {
+                type: "send-location", 
+                location: message
+            }
             if (message.trim() !== "" && socket.readyState === WebSocket.OPEN) {
-                socket.send(message);
-                logMessage(`${socket.id}: ${message}`);
+                socket.send(JSON.stringify(payload));
+                logMessage(`send: ${message}`);
                 document.getElementById("message").value = "";
             }
         }
@@ -75,10 +79,7 @@
         function getChildUuids() {
             const email = document.getElementById("email").value;
             
-            fetch(`https://localhost:${port}/get_child_id?email=${encodeURIComponent(email)}`,
-            {
-                credentials: "include"
-            }
+            fetch(`https://example.com:${port}/get_child_id?email=${encodeURIComponent(email)}`
             ).then((data) => {
                 return data.json()
             }).then((data) => {
@@ -89,6 +90,11 @@
         function setChildList(child_list) {
             const dropdown = document.getElementById("myDropdown");
             dropdown.innerHTML = "";
+            
+            option = document.createElement("option");
+            option.value = ''
+            option.textContent = 'none';
+            dropdown.appendChild(option);
 
             child_list.forEach(optionText => {
                 const option = document.createElement("option");
@@ -101,9 +107,6 @@
                 addUser(this.value);
             });
         }
-
-        
-
     </script>
 </body>
 </html>

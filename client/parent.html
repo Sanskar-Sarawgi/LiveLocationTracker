@@ -13,8 +13,8 @@
 <body>
     <h2>WebSocket Parent Client</h2>
     <div id="chat"></div>
-    <input type="text" id="message" placeholder="Enter message">
-    <button onclick="sendMessage()">Send</button>
+    <!-- <input type="text" id="message" placeholder="Enter message">
+    <button onclick="sendMessage()">Send</button> -->
     <input type="text" id="email" placeholder="Enter id">
     <button onclick="setUpSocket()">set</button>
 
@@ -22,10 +22,10 @@
 
         
         let socket = null;
-        const port = '9876'
+        const port = '443'
         
         function connectWebSocket(id) {
-            socket = new WebSocket(`ws://localhost:${port}/subscribe-location?userId=${id}`);
+            socket = new WebSocket(`wss://example.com:${port}/subscribe-location?userId=${id}`);
 
             socket.id = id
             socket.onopen = () => {
@@ -46,9 +46,9 @@
         }
 
         function sendMessage() {
-            const message = document.getElementById("message").value; 
+            const message = document.getElementById("message").value;
             if (message.trim() !== "" && socket.readyState === WebSocket.OPEN) {
-                socket.send(message);
+                socket.send(payload.json);
                 logMessage(`${socket.id}: ${message}`);
                 document.getElementById("message").value = "";
             }
@@ -68,7 +68,7 @@
 
         function setUpSocket() {
             const email = document.getElementById("email").value;
-            fetch(`https://localhost:${port}/get_id?email=${encodeURIComponent(email)}`).then((data) => {
+            fetch(`https://example.com:${port}/get_id?email=${encodeURIComponent(email)}`).then((data) => {
                 return data.json()
             }).then((data) => {
                 addUser(data.uuid)
